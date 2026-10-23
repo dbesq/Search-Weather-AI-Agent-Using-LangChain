@@ -1,0 +1,457 @@
+# 📁 PROJECT EXPORT FOR LLMs
+
+## 📊 Project Information
+
+- **Project Name**: `langchain01`
+- **Generated On**: 2026-10-23 06:49:45 (America/Chicago / GMT-05:00)
+- **Total Files Processed**: 5
+- **Export Tool**: Easy Whole Project to Single Text File for LLMs v1.1.0
+- **Tool Author**: Jota / José Guilherme Pandolfi
+
+### ⚙️ Export Configuration
+
+| Setting | Value |
+|---------|-------|
+| Language | `en` |
+| Max File Size | `1 MB` |
+| Include Hidden Files | `false` |
+| Output Format | `both` |
+
+## 🌳 Project Structure
+
+```
+├── 📁 research/
+│   └── 📄 agent_demo.ipynb (17.26 KB)
+├── 📄 app.py (3.65 KB)
+├── 📄 main.py (2.56 KB)
+├── 📄 README.md (105 B)
+└── 📄 requirements.txt (170 B)
+```
+
+## 📑 Table of Contents
+
+**Project Files:**
+
+- [📄 app.py](#📄-app-py)
+- [📄 main.py](#📄-main-py)
+- [📄 README.md](#📄-readme-md)
+- [📄 requirements.txt](#📄-requirements-txt)
+
+---
+
+## 📈 Project Statistics
+
+| Metric | Count |
+|--------|-------|
+| Total Files | 5 |
+| Total Directories | 1 |
+| Text Files | 4 |
+| Binary Files | 1 |
+| Total Size | 23.74 KB |
+
+### 📄 File Types Distribution
+
+| Extension | Count |
+|-----------|-------|
+| `.py` | 2 |
+| `.ipynb` | 1 |
+| `.md` | 1 |
+| `.txt` | 1 |
+
+## 💻 File Code Contents
+
+## 🚫 Binary/Excluded Files
+
+The following files were not included in the text content:
+
+- `research/agent_demo.ipynb`
+
+### <a id="📄-app-py"></a>📄 `app.py`
+
+**File Info:**
+- **Size**: 3.65 KB
+- **Extension**: `.py`
+- **Language**: `python`
+- **Location**: `app.py`
+- **Relative Path**: `root`
+- **Created**: 2026-10-23 00:39:02 (America/Chicago / GMT-05:00)
+- **Modified**: 2026-10-23 06:46:10 (America/Chicago / GMT-05:00)
+- **MD5**: `c44a1ba96ea1f02e5613fd591fcee4aa`
+- **SHA256**: `2db68c116582264eec26f9c4542f3b4b950717696983c4d3913fadaa8df6cf9a`
+- **Encoding**: UTF-8
+
+**File code content:**
+
+```python
+import os
+import requests
+import streamlit as st
+import certifi
+from dotenv import load_dotenv
+
+from langchain_openai import ChatOpenAI
+from langchain.tools import tool
+from langchain.agents import (
+    create_react_agent,
+    AgentExecutor
+)
+from langchain import hub
+
+from langchain_community.tools.tavily_search import TavilySearchResults
+
+# ==========================================
+# LOAD ENV VARIABLES
+# ==========================================
+os.environ["SSL_CERT_FILE"] = certifi.where()
+load_dotenv()
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+WEATHERSTACK_API_KEY = os.getenv("WEATHERSTACK_API_KEY")
+TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
+
+# ==========================================
+# STREAMLIT PAGE CONFIG
+# ==========================================
+
+
+st.set_page_config(
+    page_title="Agentic AI Assistant",
+    page_icon="🤖",
+    layout="centered"
+)
+
+st.title("🤖 Agentic AI Assistant")
+st.markdown("Search + Weather AI Agent using LangChain")
+
+# ==========================================
+# SEARCH TOOL
+# ==========================================
+
+search_tool = TavilySearchResults(max_results=2)
+
+# ==========================================
+# WEATHER TOOL
+# ==========================================
+
+@tool
+def get_weather_data(city: str) -> str:
+    """
+    Fetch current weather information for a city.
+    """
+
+    url = (
+        f"http://api.weatherstack.com/current?"
+        f"access_key={WEATHERSTACK_API_KEY}&query={city}"
+    )
+
+    response = requests.get(url)
+
+    data = response.json()
+
+    if "current" not in data:
+        return f"Could not fetch weather data for {city}"
+
+    return (
+        f"City: {city}\n"
+        f"Temperature: {data['current']['temperature']}°C\n"
+        f"Weather: {data['current']['weather_descriptions'][0]}\n"
+        f"Humidity: {data['current']['humidity']}%"
+    )
+
+
+# ==========================================
+# LLM
+# ==========================================
+
+llm = ChatOpenAI(
+    model="gpt-3.5-turbo",
+    temperature=0,
+    api_key=OPENAI_API_KEY
+)
+
+# ==========================================
+# PROMPT
+# ==========================================
+
+prompt = hub.pull("hwchase17/react")
+
+# ==========================================
+# TOOLS
+# ==========================================
+
+tools = [
+    search_tool,
+    get_weather_data
+]
+
+# ==========================================
+# CREATE AGENT
+# ==========================================
+
+agent = create_react_agent(
+    llm=llm,
+    tools=tools,
+    prompt=prompt
+)
+
+# ==========================================
+# EXECUTOR
+# ==========================================
+
+agent_executor = AgentExecutor(
+    agent=agent,
+    tools=tools,
+    verbose=True,
+    handle_parsing_errors=True
+)
+
+# ==========================================
+# UI INPUT
+# ==========================================
+
+user_query = st.text_input(
+    "Enter your query:",
+    placeholder="Example: Find the capital of India and current weather"
+)
+
+# ==========================================
+# RUN AGENT
+# ==========================================
+
+if st.button("Run Agent"):
+
+    if user_query:
+
+        with st.spinner("Agent is thinking..."):
+
+            try:
+                response = agent_executor.invoke({
+                    "input": user_query
+                })
+
+                st.success("Response Generated")
+
+                st.markdown("## Final Response")
+                st.write(response["output"])
+
+            except Exception as e:
+                st.error(f"Error: {str(e)}")
+
+    else:
+        st.warning("Please enter a query")
+```
+
+---
+
+### <a id="📄-main-py"></a>📄 `main.py`
+
+**File Info:**
+- **Size**: 2.56 KB
+- **Extension**: `.py`
+- **Language**: `python`
+- **Location**: `main.py`
+- **Relative Path**: `root`
+- **Created**: 2026-10-22 06:15:26 (America/Chicago / GMT-05:00)
+- **Modified**: 2026-10-23 06:19:06 (America/Chicago / GMT-05:00)
+- **MD5**: `4f9a9417ff38f7848f420f4e2b55f10a`
+- **SHA256**: `701fd2742364791da4d909d087e960fbcfa05866001a0177f83953e779367e21`
+- **Encoding**: ASCII
+
+**File code content:**
+
+```python
+# %%
+import os
+import certifi
+from dotenv import load_dotenv
+
+from langchain_openai import ChatOpenAI
+from langchain.tools import tool
+from langchain_community.tools.tavily_search import TavilySearchResults
+from langchain import hub
+from langchain.tools import tool 
+import requests
+
+
+# %%
+from langchain.agents import create_react_agent, AgentExecutor
+
+
+# %%
+# ==========================
+# LOAD ENV VARIABLES
+# ==========================
+os.environ["SSL_CERT_FILE"] = certifi.where()
+load_dotenv()
+
+OPEN_API_KEY=os.getenv("OPEN_API_KEY")
+TAVILY_API_KEY=os.getenv("TAVILY_API_KEY")
+WEATHERSTACK_API_KEY=os.getenv("WEATHERSTACK_API_KEY")
+
+# %%
+search_tool = TavilySearchResults(max_results=2)
+
+# %%
+@tool
+def get_weather_data(city:str) -> str:
+    """
+    Fetch current weather info for a city
+    """ 
+
+    url = (
+        f"https://api.weatherstack.com/current?"
+        f"access_key={WEATHERSTACK_API_KEY}&query={city}" 
+    )
+
+    response = requests.get(url)
+
+    data = response.json()
+
+    if "current" not in data:
+        return f"Could not fetch weather data for {city}"
+
+    return (
+        f"City: {city}\n"
+        f"Temperature: {data['current']['temperature']} degrees C\n"
+        f"Weather: {data['current']['weather_descriptions'][0]}\n"
+        f"Humidity: {data['current']['humidity']}%\n"
+    )
+
+# %%
+result = search_tool.invoke("Give me the latest news on AI")
+result
+
+# %%
+# ==========================
+# LLM
+# ==========================
+llm = ChatOpenAI(
+    model="gpt-3.5-turbo",
+    temperature=0,
+    api_key=OPEN_API_KEY
+)
+
+# %%
+response = llm.invoke("Tell me a joke about AI")
+response
+
+# %%
+# ==========================
+# PROMPT
+# ==========================
+
+prompt = hub.pull("hwchase17/react")
+
+# %%
+prompt
+
+# %%
+# ==========================
+# TOOLS
+# ==========================
+
+tools = [search_tool, get_weather_data]
+
+# %%
+# ==========================
+# CREATE AGENT
+# ==========================
+
+agent = create_react_agent(
+    llm=llm,
+    tools=tools,
+    prompt=prompt
+)
+
+# %%
+# ==========================
+# EXECUTOR
+#   -verbose is whether you see the logs
+# ==========================
+
+agent_executor = AgentExecutor(
+    agent=agent,
+    tools=tools,
+    verbose=True,
+    handle_parsing_errors=True
+)
+
+# %%
+# ==========================
+# RUN
+# ==========================
+
+response = agent_executor.invoke({
+    "input": (
+        "Tell me the capital of Iraq"
+        "and find the current weather there"
+    )
+})
+
+# %%
+print(response["output"])
+
+
+
+```
+
+---
+
+### <a id="📄-readme-md"></a>📄 `README.md`
+
+**File Info:**
+- **Size**: 105 B
+- **Extension**: `.md`
+- **Language**: `text`
+- **Location**: `README.md`
+- **Relative Path**: `root`
+- **Created**: 2026-10-22 06:16:17 (America/Chicago / GMT-05:00)
+- **Modified**: 2026-10-22 06:16:59 (America/Chicago / GMT-05:00)
+- **MD5**: `99ea109406178d2e49b3ae2acd644ce0`
+- **SHA256**: `c130cae1e0c377dd078553f15123fe8cc8f2ac24be94b3cafda0a76ca6051d9b`
+- **Encoding**: ASCII
+
+**File code content:**
+
+````markdown
+conda create -n langagent python=3.12 -y
+
+conda activate langagent
+
+pip install -r requirements.txt
+
+````
+
+---
+
+### <a id="📄-requirements-txt"></a>📄 `requirements.txt`
+
+**File Info:**
+- **Size**: 170 B
+- **Extension**: `.txt`
+- **Language**: `text`
+- **Location**: `requirements.txt`
+- **Relative Path**: `root`
+- **Created**: 2026-10-22 06:17:24 (America/Chicago / GMT-05:00)
+- **Modified**: 2026-10-23 06:38:38 (America/Chicago / GMT-05:00)
+- **MD5**: `b144abb84dfd733883bbab87597adbb7`
+- **SHA256**: `cbf0dbbeecec4049ef895752d6741d245a5ad6a2f6ece10e507b9b85c4d81178`
+- **Encoding**: ASCII
+
+**File code content:**
+
+```text
+langchain==0.1.16
+langchain-community==0.0.32
+langchain-core==0.1.42
+langchain-openai==0.1.3
+requests==2.31.0
+tavily-python
+python-dotenv
+langchainhub
+streamlit
+
+```
+
+---
+
